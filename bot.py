@@ -13,7 +13,7 @@ AUTHORIZED_CHAT_IDS = [
 ]
 
 # Notify if dates are found before this date
-FIND_DATES_BEFORE = "2023-08-20"
+FIND_DATES_BEFORE = "2026-07-23"
 
 # Telegram Bot API Token
 TELEGRAM_API_TOKEN = "<INSERT_TOKEN_HERE>" # replace with your Telegram Bot API Token
@@ -24,12 +24,12 @@ LOOKUP_INTERVAL_SEC = 60 * 10 # 10 minutes
 DMV_APPOINTMENT_API_ENDPOINT = "https://www.dmv.ca.gov/portal/wp-json/dmv/v1/appointment/branches/"
 
 branch_codes = {
-    "redwood_city": "548!c6a4228d96cbe545c591e4257d1c035da72cbe10671d502597460e5f0730",
-    "los_gatos": "640!9ffc1fef9b57f8bf1ba6984ffdb4981acbf88d4b101ae27edac9d65a45f4",
-    "santa_clara": "632!afa980930a4d9da9dea767520801e38ef924a286d22bf6d97782c5d20731"
-    # "san_jose": "516!56b48e272ba45819d81868f440fb30eb6c406b705436cf1d101d2ea2c75c",
-    # "san_mateo": "593!fabfb52efab03764853fcdefa999d2a0be739510bec5207f4b82d5fb16e0",
-    # "fremont": "644!03ada32357f5fd32a107fca81b020fd9b4fd0062cbaabf014dcacb6b5516"
+    "costa_mesa": "628!4bbd75c86ed4a7c60fe5b8b7d4581c89d7b14a15218776c5c999dd2baa61",
+    "santa_ana": "542!7a56567b1d6b2331a42a0f405c3de459ba86c31c23329e76aecf50883697",
+    "long_beach": "AT2!13be0ec4ed4b308968b69a67515d4a4cf8a3c352ec1a771e63c3c9d70542",
+    "fullerton": "607!48c4e5f82e3be3881582ae164482b7b3b55085a153cf0c1fe7a7be96f005",
+    "san_clemente": "648!d04cd5bf585d51a14643f28fadbb2f675a3b169ce28b8e7015ef5e5a902d",
+    "westminster": "611!2a45f10734c6406e59f36396fcf6da62054d0f08880dfb97676a51bfe511"
 }
 
 last_updated_timestamp = None
