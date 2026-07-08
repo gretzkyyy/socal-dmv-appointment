@@ -1,22 +1,36 @@
 import requests
 import time
+import asyncio
 from datetime import datetime
 
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+#Discord Webhook, stored as local OS environmental var 
+import os
 
+DISCORD_WEBHOOK_URL = os.getenv("discord_webhook_url")
+# create a new environmental var through user settings on your device 
+# name it "discord_webhook_url" 
+# in discord, add a new webhook & copy paste the url into your environmental var 
+
+if not DISCORD_WEBHOOK_URL:
+    raise RuntimeError("DISCORD_WEBHOOK_URL environment variable is not set.")
+    
+# Discord Message Function 
+def send_discord_message(message):
+    data = {
+        "content": message
+    }
+
+    response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+
+    if response.status_code not in [200, 204]:
+        print("Discord error:", response.status_code)
+        print(response.text)
+        
 # number of dates to show if no new dates are found
 NUMBER_OF_FEW_DATES = 1 
 
-# Telegram chat IDs that are authorized to use this bot
-AUTHORIZED_CHAT_IDS = [
-    0 # replace with your chat ID
-]
-
 # Notify if dates are found before this date
 FIND_DATES_BEFORE = "2026-07-23"
-
-# Telegram Bot API Token
-TELEGRAM_API_TOKEN = "<INSERT_TOKEN_HERE>" # replace with your Telegram Bot API Token
 
 # Interval to check for new dates (in seconds)
 LOOKUP_INTERVAL_SEC = 60 * 10 # 10 minutes
@@ -37,9 +51,6 @@ last_updated_timestamp = None
 dates_querystring = "services[]=DT!1857a62125c4425a24d85aceac6726cb8df3687d47b03b692e27bd8d17814&numberOfCustomers=1"
 
 current_latest_dates = {}
-
-app = ApplicationBuilder().token(TELEGRAM_API_TOKEN).build()
-job_queue = app.job_queue
 
 async def get_available_dates(city):
     # send GET request to the DMV Appointments API
@@ -105,58 +116,11 @@ async def get_dates_in_text_response(report_only_changes=False):
 """
 
         # wait 1 second before sending another request to DMV API
-        time.sleep(1)
+        await asyncio.sleep(1)
 
     return full_reply_body
 
-
-async def send_welcome(update, context):
-    await update.message.reply_text("""\
-vroom vroom 🚙
-try the /dates command to get available dates
-""")
-                         
-app.add_handler(CommandHandler("help", send_welcome))
-app.add_handler(CommandHandler("start", send_welcome))
-
-async def send_pong(update, context):
-    await update.message.reply_text(f"""pong, now: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-last updated: {str(last_updated_timestamp)}
-""")
-
-app.add_handler(CommandHandler("ping", send_pong))
-
-# Handle dates command
-async def send_dates(update, context):
-
-    # check if chat ID is valid first
-    if update.message.chat_id not in AUTHORIZED_CHAT_IDS:
-        await update.message.reply_text("Sorry, you are not authorized to use this bot.")
-        return
-
-    await context.bot.send_chat_action(chat_id=update.message.chat_id, action="typing")
-    await update.message.reply_text("Getting available dates...")
-
-    try:
-        full_reply_body = await get_dates_in_text_response(report_only_changes=False)
-
-        if not full_reply_body:
-            await update.message.reply_text("Sorry, there was an error getting the available dates. Please try again later.")
-            return
-        
-        await update.message.reply_text(full_reply_body)
-
-    except Exception as e:
-        await update.message.reply_text("Sorry, there was an exception.")
-        await update.message.reply_text(str(e))
-        print(e)
-        return
-
-
-app.add_handler(CommandHandler("dates", send_dates))
-
-async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
+async def callback_minute():
     texts_to_send = []
     
     try:
@@ -179,9 +143,13 @@ async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
         return        
     
     if texts_to_send:
-        for chat_id in AUTHORIZED_CHAT_IDS:
-            await context.bot.send_message(chat_id=chat_id, text="\n".join(texts_to_send))        
+        send_discord_message("\n".join(texts_to_send))        
 
-job_minute = job_queue.run_repeating(callback_minute, interval=LOOKUP_INTERVAL_SEC, first=5)
+import asyncio
 
-app.run_polling()
+async def main():
+    while True:
+        await callback_minute()
+        await asyncio.sleep(LOOKUP_INTERVAL_SEC)
+
+asyncio.run(main())
