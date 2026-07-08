@@ -1,18 +1,17 @@
 import requests
 import time
-import asyncio
 from datetime import datetime
 
 #Discord Webhook, stored as local OS environmental var 
 import os
 
-DISCORD_WEBHOOK_URL = os.getenv("discord_webhook_url")
+discord_webhook_url = os.getenv("discord_webhook_url")
 # create a new environmental var through user settings on your device 
 # name it "discord_webhook_url" 
 # in discord, add a new webhook & copy paste the url into your environmental var 
 
-if not DISCORD_WEBHOOK_URL:
-    raise RuntimeError("DISCORD_WEBHOOK_URL environment variable is not set.")
+if not discord_webhook_url:
+    raise RuntimeError("discord_webhook_url environment variable is not set.")
     
 # Discord Message Function 
 def send_discord_message(message):
@@ -20,7 +19,7 @@ def send_discord_message(message):
         "content": message
     }
 
-    response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+    response = requests.post(discord_webhook_url, json=data)
 
     if response.status_code not in [200, 204]:
         print("Discord error:", response.status_code)
@@ -52,7 +51,7 @@ dates_querystring = "services[]=DT!1857a62125c4425a24d85aceac6726cb8df3687d47b03
 
 current_latest_dates = {}
 
-async def get_available_dates(city):
+def get_available_dates(city):
     # send GET request to the DMV Appointments API
     response = requests.get(f"{DMV_APPOINTMENT_API_ENDPOINT}/{branch_codes[city]}/dates?{dates_querystring}")
 
@@ -72,14 +71,14 @@ async def get_available_dates(city):
 
     return dates
 
-async def update_latest_dates(city, new_date):
+def update_latest_dates(city, new_date):
 
     global current_latest_dates
 
     # check if city is in current_latest_dates
     if city not in current_latest_dates:
         current_latest_dates[city] = new_date
-        return new_date
+        return False
 
     # check if date is prior to of current latest date
     find_dates_before_datetime = datetime.strptime(FIND_DATES_BEFORE, "%Y-%m-%d")
@@ -91,7 +90,7 @@ async def update_latest_dates(city, new_date):
     current_latest_dates[city] = new_date
     return False
 
-async def get_dates_in_text_response(report_only_changes=False):
+def get_dates_in_text_response(report_only_changes=False):
     full_reply_body = ""
 
     for city in branch_codes:
@@ -120,7 +119,7 @@ async def get_dates_in_text_response(report_only_changes=False):
 
     return full_reply_body
 
-async def callback_minute():
+def callback_minute():
     texts_to_send = []
     
     try:
@@ -145,11 +144,17 @@ async def callback_minute():
     if texts_to_send:
         send_discord_message("\n".join(texts_to_send))        
 
-import asyncio
 
-async def main():
+def main():
     while True:
         await callback_minute()
         await asyncio.sleep(LOOKUP_INTERVAL_SEC)
 
 asyncio.run(main())
+
+try:
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+except requests.RequestException as e:
+    print(f"Request failed: {e}")
+    return False
