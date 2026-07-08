@@ -75,6 +75,7 @@ def get_available_dates(city):
     )
 
     print(f"Checking {city}...")
+    print(url)
 
     try:
         response = requests.get(
